@@ -76,20 +76,25 @@ def train(train_loader, test_loader, lr=0.5):
 
     model = construct_rn9().cuda()
 
-    opt = SGD(model.parameters(), lr=lr, momentum=0.9, weight_decay=5e-4)
+    optimizer = SGD(model.parameters(), lr=lr, momentum=0.9, weight_decay=5e-4)
     iters_per_epoch = len(train_loader)
     lr_schedule = np.interp(np.arange(epochs * iters_per_epoch + 1),
                             [0, 5 * iters_per_epoch, epochs * iters_per_epoch],
                             [0, 1, 0])
-    scheduler = lr_scheduler.LambdaLR(opt, lr_schedule.__getitem__)
+    scheduler = lr_scheduler.LambdaLR(optimizer, lr_schedule.__getitem__)
+    scaler = GradScaler()
 
+    losses = []
     for _ in tqdm(range(epochs)):
         for inputs, labels in train_loader:
-            outs = model(inputs)
-            loss = F.cross_entropy(outs, labels)
-            opt.zero_grad(set_to_none=True)
-            loss.backward()
-            opt.step()
+            with autocast():
+                outs = model(inputs)
+                loss = F.cross_entropy(outs, labels)
+            losses.append(loss.item())
+            optimizer.zero_grad(set_to_none=True)
+            scaler.scale(loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
             scheduler.step()
 
     print('train correct:', evaluate(model, train_loader))
@@ -165,7 +170,7 @@ def main():
     new_targets = torch.cat(new_yy)
 
     max_r = (new_images - train_loader.images).reshape(len(new_images), -1).norm(dim=1).max()
-    print('max r:', max_r) # should be at most the desired radius
+    print('max r:', max_r.cpu()) # should be at most the desired radius
     train_loader.images = new_images
     train_loader.targets = new_targets
 
