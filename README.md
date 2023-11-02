@@ -41,6 +41,6 @@ To get results for `D_det` which are closer to the paper (~35%), we need to use 
 python main.py --det --num-noise=4
 ```
 
-The difference in numbers is possibly caused by the paper using ResNet-18 while this code uses a 9-layer ResNet.
+The difference in numbers is possibly caused by the paper using ResNet-50 while this code uses a 9-layer ResNet.
 
 
