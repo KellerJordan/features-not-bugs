@@ -27,3 +27,20 @@ train loss: 0.04633096605539322
 test correct: 8106
 test correct w/ tta: 8293
 ```
+
+This corresponds with the experiment generating `D_rand` for CIFAR-10, which yielded 63.3% accuracy in the paper (Table 1).
+
+To get the accuracy for `D_det`, run
+```
+python main.py --det
+```
+Which will yield much worse results than the paper.
+
+To get results for `D_det` which are closer to the paper (~35%), we need to use some noise when generating the PGD perturbations:
+```
+python main.py --det --num-noise=4
+```
+
+The difference in numbers is possibly caused by the paper using ResNet-18 while this code uses a 9-layer ResNet.
+
+
