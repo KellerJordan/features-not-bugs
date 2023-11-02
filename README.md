@@ -1,4 +1,9 @@
-# Features-Bugs-Replication
+# features-not-bugs
+
+Replication of [Adversarial Examples are Not Bugs, They Are Features](https://arxiv.org/abs/1905.02175).
+
+Seems to give way better numbers than the paper?
+
 
 To run:
 ```

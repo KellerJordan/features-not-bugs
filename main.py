@@ -110,13 +110,10 @@ def pgd_withnoise(model, inputs, new_labels):
     """
     L2 PGD with noise (data augmentation)
     """
-    #r = 2.0 # Ilyas et al. used 2.0
-    #steps = 12
-    eta = 0.5 # 0.5 seems to always work well
-    #n_noise = 0 # how many extra noised inputs to use.
     r = args.r
     steps = args.steps
     n_noise = args.num_noise
+    eta = 0.5 # this seems to work well for all choices of r
 
     deltas = torch.zeros_like(inputs, requires_grad=True)
     losses = []
