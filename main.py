@@ -106,12 +106,17 @@ def train(train_loader, test_loader, lr=0.5):
 
 # this loader just exists to grab its augment method and normalization stats
 loader = CifarLoader('/tmp', train=True, batch_size=1, aug=dict(flip=True, translate=2))
-
-steps = 12
-r = 2.0 # Ilyas et al. used 2.0
-eta = 0.5 # 0.5 seems to always work well
-n_noise = 0 # how many extra noised inputs to use.
-def pgd_noise(model, inputs, new_labels):
+def pgd_withnoise(model, inputs, new_labels):
+    """
+    L2 PGD with noise (data augmentation)
+    """
+    #r = 2.0 # Ilyas et al. used 2.0
+    #steps = 12
+    eta = 0.5 # 0.5 seems to always work well
+    #n_noise = 0 # how many extra noised inputs to use.
+    r = args.r
+    steps = args.steps
+    n_noise = args.num_noise
 
     deltas = torch.zeros_like(inputs, requires_grad=True)
     losses = []
@@ -162,8 +167,13 @@ def main():
     new_xx = []
     new_yy = []
     for inputs, labels in tqdm(loader):
-        new_labels = torch.randint(10, size=labels.shape).cuda()
-        new_inputs = pgd_noise(model, inputs, new_labels)
+        if args.det:
+            # D_det
+            new_labels = (labels + 1) % 10
+        else:
+            # D_rand
+            new_labels = torch.randint(10, size=labels.shape).cuda()
+        new_inputs = pgd_withnoise(model, inputs, new_labels)
         new_xx.append(new_inputs)
         new_yy.append(new_labels)
     new_images = torch.cat(new_xx)
@@ -184,6 +194,12 @@ def main():
     # 3. Train another model using the new dataset.
     train(train_loader, test_loader, lr=0.1)
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--r', type=float, default=2.0)
+parser.add_argument('--steps', type=int, default=12)
+parser.add_argument('--num-noise', type=int, default=0)
+parser.add_argument('--det', action='store_true')
 if __name__ == '__main__':
+    args = parser.parse_args()
     main()
 
